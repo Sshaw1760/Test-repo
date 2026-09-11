@@ -1,0 +1,166 @@
+import math
+
+
+# ============================================================
+# PROBLEM 1
+# Continuous Compound Interest
+#
+# Formula:
+# P(t) = P0 * e^(rt)
+# ============================================================
+
+print("========================================")
+print("Problem 1: Continuous Compound Interest")
+print("========================================")
+
+P0 = float(input("Enter the initial investment amount: $"))
+t = float(input("Enter the length of the investment in years: "))
+r = float(input("Enter the annual interest rate (%): ")) / 100
+
+P = P0 * math.exp(r * t)
+
+print("Final investment amount:", P)
+
+
+# ============================================================
+# PROBLEM 2
+# Monthly Deposits for Two Years
+#
+# Formula:
+# P24 = d * (((1 + r/k)^24 - 1) / (r/k))
+#
+# d = monthly deposit
+# r = annual interest rate
+# k = number of compounding periods per year
+# ============================================================
+
+print()
+print("========================================")
+print("Problem 2: Monthly Savings")
+print("========================================")
+
+d = float(input("Enter the amount deposited each month: $"))
+r = float(input("Enter the annual interest rate (%): ")) / 100
+
+k = 12
+months = 24
+
+P24 = d * (((1 + r / k) ** months - 1) / (r / k))
+
+print("Final balance after 24 months:", P24)
+
+
+# ============================================================
+# PROBLEM 3
+# Calculate Monthly Deposit Needed
+#
+# Formula:
+# P24 = d * (((1 + r/k)^24 - 1) / (r/k))
+#
+# Solving for d:
+#
+# d = P24 / (((1 + r/k)^24 - 1) / (r/k))
+# ============================================================
+
+print()
+print("========================================")
+print("Problem 3: Required Monthly Deposit")
+print("========================================")
+
+target = float(input("Enter the amount you want for the downpayment: $"))
+r = float(input("Enter the annual interest rate (%): ")) / 100
+
+k = 12
+months = 24
+
+d = target / (((1 + r / k) ** months - 1) / (r / k))
+
+print("Amount to deposit each month:", d)
+
+
+# ============================================================
+# PROBLEM 4
+# Mortgage Monthly Payment
+#
+# Formula:
+#
+#              P0
+# d = -----------------------------
+#       1 - (1 + r/k)^(-Nk)
+#       --------------------------
+#               r/k
+#
+# P0 = amount to finance
+# r = annual interest rate
+# k = number of times interest is compounded per year
+# N = number of years
+# d = monthly payment
+# ============================================================
+
+print()
+print("========================================")
+print("Problem 4: Mortgage Payment")
+print("========================================")
+
+P0 = float(input("Enter the amount you want to borrow: $"))
+r = float(input("Enter the annual interest rate (%): ")) / 100
+N = float(input("Enter the term of the loan in years: "))
+
+k = 12
+
+d = P0 / ((1 - (1 + r / k) ** (-N * k)) / (r / k))
+
+print("Monthly mortgage payment:", d)
+
+
+# ============================================================
+# PROBLEM 5
+# Calculate How Much House You Can Afford
+#
+# Uses the mortgage formula from Problem 4.
+#
+# Solving for P0:
+#
+# P0 = d * ((1 - (1 + r/k)^(-Nk)) / (r/k))
+#
+# Calculates the amount that can be financed for:
+# 15-year mortgage
+# 30-year mortgage
+# ============================================================
+
+print()
+print("========================================")
+print("Problem 5: How Much House Can You Afford?")
+print("========================================")
+
+d = float(input("Enter the amount you can afford to pay each month: $"))
+r = float(input("Enter the annual interest rate (%): ")) / 100
+
+k = 12
+
+
+# 15-year mortgage
+N15 = 15
+
+P0_15 = d * ((1 - (1 + r / k) ** (-N15 * k)) / (r / k))
+
+
+# 30-year mortgage
+N30 = 30
+
+P0_30 = d * ((1 - (1 + r / k) ** (-N30 * k)) / (r / k))
+
+
+print()
+print("Amount you can finance with a 15-year mortgage:", P0_15)
+print("Amount you can finance with a 30-year mortgage:", P0_30)
+
+
+# ============================================================
+# END OF PROGRAM
+# ============================================================
+
+print()
+print("========================================")
+print("All five problems have been completed.")
+print("========================================")
