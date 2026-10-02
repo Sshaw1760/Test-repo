@@ -1,0 +1,232 @@
+# AllProblems.py
+# Python Programming, 4/e - John Zelle
+# Problems 1-5
+
+from graphics import *
+import time
+
+
+# ---------------------------------------------------------
+# Problem 1
+# Integer division using repeated subtraction
+# ---------------------------------------------------------
+
+def simpleDiv(dividend, divisor):
+    count = 0
+
+    while dividend >= divisor:
+        dividend = dividend - divisor
+        count = count + 1
+
+    return count
+
+
+def problem1():
+    print("\nProblem 1 - Simple Division")
+
+    dividend = int(input("Enter the dividend: "))
+    divisor = int(input("Enter the divisor: "))
+
+    result = simpleDiv(dividend, divisor)
+
+    print("The result is:", result)
+
+
+# ---------------------------------------------------------
+# Problem 2
+# Button program
+# ---------------------------------------------------------
+
+def buttonClicked(point, button):
+    p1 = button.getP1()
+    p2 = button.getP2()
+
+    x = point.getX()
+    y = point.getY()
+
+    left = p1.getX()
+    right = p2.getX()
+    top = p1.getY()
+    bottom = p2.getY()
+
+    if left <= x <= right and top <= y <= bottom:
+        return True
+    else:
+        return False
+
+
+def problem2():
+    print("\nProblem 2 - Button")
+
+    win = GraphWin("Button", 400, 300)
+
+    button = Rectangle(Point(150, 120), Point(250, 180))
+    button.setFill("lightgray")
+    button.draw(win)
+
+    label = Text(Point(200, 150), "Click Me")
+    label.draw(win)
+
+    # Keep waiting until the button is clicked
+    while True:
+        point = win.getMouse()
+
+        if buttonClicked(point, button):
+            break
+
+    label.setText("Button Clicked!")
+
+    win.getMouse()
+    win.close()
+
+
+# ---------------------------------------------------------
+# Problem 3
+# Bouncing ball calculation
+# ---------------------------------------------------------
+
+def problem3():
+    print("\nProblem 3 - Bouncing Ball")
+
+    height = float(input("Enter the initial height in meters: "))
+
+    bounce = 0
+
+    while height >= 0.001:
+        height = height * 0.60
+        bounce = bounce + 1
+
+    print("The ball bounced", bounce, "times.")
+
+
+# ---------------------------------------------------------
+# Problem 4
+# Animated bouncing ball
+# ---------------------------------------------------------
+
+def problem4():
+    print("\nProblem 4 - Animated Bouncing Ball")
+
+    height = float(input("Enter the initial height in meters: "))
+
+    win = GraphWin("Bouncing Ball", 400, 400)
+
+    # Set the coordinate system
+    win.setCoords(0, 0, 10, height)
+
+    # Create the ball
+    radius = height * 0.03
+
+    ball = Circle(Point(5, height), radius)
+    ball.setFill("red")
+    ball.draw(win)
+
+    bounce = 0
+
+    while height >= 0.001:
+
+        # Move the ball downward
+        steps = 20
+
+        for i in range(steps):
+            ball.move(0, -height / steps)
+            time.sleep(0.03)
+
+        # Move the ball upward
+        for i in range(steps):
+            ball.move(0, height / steps)
+            time.sleep(0.03)
+
+        bounce = bounce + 1
+
+        # The next bounce reaches 60% of the previous height
+        height = height * 0.60
+
+    print("The ball bounced", bounce, "times.")
+
+    win.getMouse()
+    win.close()
+
+
+# ---------------------------------------------------------
+# Problem 5
+# Euler's Totient Function
+# ---------------------------------------------------------
+
+def gcd(a, b):
+    while b != 0:
+        remainder = a % b
+        a = b
+        b = remainder
+
+    return a
+
+
+def phi(n):
+    relativelyPrime = []
+
+    for k in range(1, n):
+        if gcd(n, k) == 1:
+            relativelyPrime.append(k)
+
+    return relativelyPrime
+
+
+def problem5():
+    print("\nProblem 5 - Euler's Totient Function")
+
+    n = int(input("Enter a positive integer: "))
+
+    result = phi(n)
+
+    print("Numbers relatively prime to", n, "are:")
+    print(result)
+
+    print("The value of phi(", n, ") is", len(result))
+
+
+# ---------------------------------------------------------
+# Main Program
+# ---------------------------------------------------------
+
+def main():
+
+    while True:
+
+        print("\n===================================")
+        print("       PYTHON ASSIGNMENT")
+        print("===================================")
+        print("1. Simple Division")
+        print("2. Button")
+        print("3. Bouncing Ball Calculation")
+        print("4. Animated Bouncing Ball")
+        print("5. Euler's Totient Function")
+        print("6. Exit")
+        print("===================================")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            problem1()
+
+        elif choice == "2":
+            problem2()
+
+        elif choice == "3":
+            problem3()
+
+        elif choice == "4":
+            problem4()
+
+        elif choice == "5":
+            problem5()
+
+        elif choice == "6":
+            print("Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+
+main()
