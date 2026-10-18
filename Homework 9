@@ -1,0 +1,245 @@
+import random
+import time
+
+# Optional import for Problem 1 (requires graphics.py by John Zelle)
+try:
+    from graphics import *
+    GRAPHICS_AVAILABLE = True
+except ImportError:
+    GRAPHICS_AVAILABLE = False
+
+
+# ==========================================
+# PROBLEM 1: Multi-Ball Bouncing Simulation
+# ==========================================
+def run_multi_ball_simulation():
+    if not GRAPHICS_AVAILABLE:
+        print("\n[Error] Zelle's 'graphics.py' module is not installed or available.")
+        print("Please ensure graphics.py is in your directory to run this simulation.")
+        return
+
+    print("\n--- Running Multi-Ball Bouncing Simulation ---")
+    win = GraphWin("Three Bouncing Balls", 600, 600)
+    win.setCoords(0, 0, 600, 600)
+    
+    num_balls = 3
+    balls = []
+    velocities = []
+    radii = 20
+    colors = ["red", "blue", "green"]
+    
+    for i in range(num_balls):
+        x = random.randint(radii, 600 - radii)
+        y = random.randint(radii, 600 - radii)
+        ball = Circle(Point(x, y), radii)
+        ball.setFill(colors[i])
+        ball.draw(win)
+        balls.append(ball)
+        
+        dx = random.choice([-4, -3, 3, 4])
+        dy = random.choice([-4, -3, 3, 4])
+        velocities.append([dx, dy])
+        
+    print("Simulation running. Click anywhere in the graphics window to exit.")
+    while not win.checkMouse():
+        for i in range(num_balls):
+            ball = balls[i]
+            dx, dy = velocities[i]
+            ball.move(dx, dy)
+            
+            center = ball.getCenter()
+            x, y = center.getX(), center.getY()
+            
+            if x - radii <= 0 or x + radii >= 600:
+                velocities[i][0] = -dx
+            if y - radii <= 0 or y + radii >= 600:
+                velocities[i][1] = -dy
+                
+        time.sleep(0.02)
+        
+    win.close()
+
+
+# ==========================================
+# PROBLEM 2: Polybius Checkerboard Cipher
+# ==========================================
+POLYBIUS_BOARD = [
+    ['A', 'B', 'C', 'D', 'E'],
+    ['F', 'G', 'H', 'I', 'K'], # I and J share a cell
+    ['L', 'M', 'N', 'O', 'P'],
+    ['Q', 'R', 'S', 'T', 'U'],
+    ['V', 'W', 'X', 'Y', 'Z']
+]
+
+def find_letter_coordinates(letter, board):
+    letter = letter.upper()
+    if letter == 'J':
+        letter = 'I'
+    for r_idx, row in enumerate(board):
+        if letter in row:
+            return (r_idx, row.index(letter))
+    return None
+
+def polybius_demo():
+    print("\n--- Polybius Checkerboard Demo ---")
+    msg = input("Enter a message to encode (e.g., PYTHON): ").strip()
+    if not msg:
+        msg = "PYTHON"
+        
+    # Encipher
+    ciphertext = []
+    for char in msg.upper():
+        if char.isalpha():
+            coords = find_letter_coordinates(char, POLYBIUS_BOARD)
+            if coords:
+                ciphertext.append(f"{coords[0]+1}{coords[1]+1}")
+    encoded = " ".join(ciphertext)
+    print(f"Enciphered: {encoded}")
+    
+    # Decipher
+    plaintext = []
+    for pair in encoded.split():
+        r, c = int(pair[0]) - 1, int(pair[1]) - 1
+        plaintext.append(POLYBIUS_BOARD[r][c])
+    print(f"Deciphered: {''.join(plaintext)}")
+
+
+# ==========================================
+# PROBLEM 3: Keyword Transposition Cipher
+# ==========================================
+def keyword_encipher_demo():
+    print("\n--- Keyword Transposition Cipher Demo ---")
+    message = input("Enter message (default: PROGRAMMINGWITHPYTHONISCOOL): ").strip()
+    if not message:
+        message = "PROGRAMMINGWITHPYTHONISCOOL"
+    keyword = input("Enter keyword (default: PYTHON): ").strip()
+    if not keyword:
+        keyword = "PYTHON"
+        
+    cols = len(keyword)
+    rows = (len(message) + cols - 1) // cols
+    padded = message.ljust(rows * cols, 'X')
+    
+    # Build list of lists grid
+    grid = []
+    idx = 0
+    for r in range(rows):
+        row = []
+        for c in range(cols):
+            row.append(padded[idx])
+            idx += 1
+        grid.append(row)
+        
+    # Sort keyword columns alphabetically
+    indexed_kw = sorted(list(enumerate(keyword.upper())), key=lambda x: x[1])
+    
+    cipher_parts = []
+    for col_idx, _ in indexed_kw:
+        col_chars = [grid[r][col_idx] for r in range(rows)]
+        cipher_parts.append("".join(col_chars))
+        
+    result = " ".join(cipher_parts)
+    print(f"Keyword Ciphertext: {result}")
+
+
+# ==========================================
+# PROBLEM 4: Twisted Path Cipher
+# ==========================================
+def twisted_path_demo():
+    print("\n--- Twisted Path Cipher Demo ---")
+    message = "PROGRAMMINGWITHPYTHONISCOOL"
+    rows, cols = 5, 6
+    padded = message.ljust(rows * cols, 'X')
+    
+    # Grid initialization
+    grid = [[' ' for _ in range(cols)] for _ in range(rows)]
+    idx = 0
+    for r in range(rows):
+        for c in range(cols):
+            grid[r][c] = padded[idx]
+            idx += 1
+            
+    # Sample tuple path (serpentine or custom path)
+    sample_path = [
+        (0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
+        (1,5), (2,5), (3,5), (4,5), (4,4), (4,3),
+        (4,2), (4,1), (4,0), (3,0), (2,0), (1,0),
+        (1,1), (1,2), (1,3), (1,4), (2,4), (3,4),
+        (3,3), (3,2), (3,1), (2,1), (2,2), (2,3)
+    ]
+    
+    cipher_chars = [grid[r][c] for (r, c) in sample_path]
+    ciphertext = "".join(cipher_chars)
+    print(f"Original Message: {message}")
+    print(f"Twisted Path Ciphertext: {ciphertext}")
+
+
+# ==========================================
+# PROBLEM 5: Combined Keyword & Path Cipher
+# ==========================================
+def combined_cipher_demo():
+    print("\n--- Combined Keyword & Path Cipher Demo ---")
+    message = "PROGRAMMINGWITHPYTHONISCOOL"
+    keyword = "PYTHON"
+    rows, cols = 5, 6
+    
+    # Step 1: Build grid with keyword column ordering
+    padded = message.ljust(rows * cols, 'X')
+    grid = [[' ' for _ in range(cols)] for _ in range(rows)]
+    sorted_kw = sorted(list(enumerate(keyword.upper())), key=lambda x: x[1])
+    
+    msg_idx = 0
+    for original_col_idx, _ in sorted_kw:
+        for r in range(rows):
+            if msg_idx < len(padded):
+                grid[r][original_col_idx] = padded[msg_idx]
+                msg_idx += 1
+                
+    # Step 2: Read along a tuple path
+    sample_path = [
+        (0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
+        (1,5), (2,5), (3,5), (4,5), (4,4), (4,3),
+        (4,2), (4,1), (4,0), (3,0), (2,0), (1,0),
+        (1,1), (1,2), (1,3), (1,4), (2,4), (3,4),
+        (3,3), (3,2), (3,1), (2,1), (2,2), (2,3)
+    ]
+    
+    ciphertext = "".join([grid[r][c] for (r, c) in sample_path])
+    print(f"Combined Cipher (Keyword '{keyword}' + Path): {ciphertext}")
+
+
+# ==========================================
+# MAIN PROGRAM CONTROLLER (MENU)
+# ==========================================
+def main():
+    while True:
+        print("\n========================================")
+        print("     SUPPLEMENTARY PROBLEMS TOOLKIT     ")
+        print("========================================")
+        print("1. Multi-Ball Bouncing Simulation (Prob 1)")
+        print("2. Polybius Checkerboard Cipher (Prob 2)")
+        print("3. Keyword Transposition Cipher (Prob 3)")
+        print("4. Twisted Path Cipher (Prob 4)")
+        print("5. Combined Keyword & Path Cipher (Prob 5)")
+        print("6. Exit")
+        
+        choice = input("\nSelect an option (1-6): ").strip()
+        
+        if choice == '1':
+            run_multi_ball_simulation()
+        elif choice == '2':
+            polybius_demo()
+        elif choice == '3':
+            keyword_encipher_demo()
+        elif choice == '4':
+            twisted_path_demo()
+        elif choice == '5':
+            combined_cipher_demo()
+        elif choice == '6':
+            print("\nExiting toolkit. Goodbye!")
+            break
+        else:
+            print("\n[Invalid Choice] Please enter a number between 1 and 6.")
+
+if __name__ == "__main__":
+    main()
