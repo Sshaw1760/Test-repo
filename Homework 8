@@ -1,0 +1,282 @@
+# ==========================================
+# FINANCIAL & CRYPTOGRAPHIC TOOLKIT 
+# ==========================================
+
+# ------------------------------------------
+# PROBLEM 1: Loan Amortization Schedule
+# ------------------------------------------
+def generate_amortization_schedule():
+    print("\n--- 1. Loan Amortization Schedule ---")
+    try:
+        p0 = float(input("Enter loan amount financed ($): "))
+        annual_rate = float(input("Enter annual interest rate (e.g., 0.06 for 6%): "))
+        k = int(input("Enter number of compounding periods per year (e.g., 12 for monthly): "))
+        years = int(input("Enter loan duration in years: "))
+    except ValueError:
+        print("[Error] Invalid numerical input. Returning to menu.")
+        return
+
+    total_payments = years * k
+    periodic_rate = annual_rate / k
+    
+    if periodic_rate > 0:
+        pmt = p0 * (periodic_rate) / (1 - (1 + periodic_rate) ** (-total_payments))
+    else:
+        pmt = p0 / total_payments
+        
+    print(f"\n{'='*75}")
+    print(f"LOAN AMORTIZATION SCHEDULE")
+    print(f"Principal: ${p0:,.2f} | Annual Rate: {annual_rate*100}% | Term: {years} Years ({k} payments/yr)")
+    print(f"Periodic Payment: ${pmt:,.2f}")
+    print(f"{'='*75}")
+    print(f"{'Pmt #':<8} {'Payment':<12} {'Interest':<12} {'Principal':<12} {'Balance':<15}")
+    print(f"{'-'*75}")
+    
+    balance = p0
+    for pmt_num in range(1, total_payments + 1):
+        interest_payment = balance * periodic_rate
+        principal_payment = pmt - interest_payment
+        balance -= principal_payment
+        
+        if balance < 0:
+            balance = 0.0
+            
+        print(f"{pmt_num:<8} ${pmt:<11.2f} ${interest_payment:<11.2f} ${principal_payment:<11.2f} ${balance:<14.2f}")
+    print(f"{'='*75}\n")
+
+
+# ------------------------------------------
+# PROBLEM 2: Scytale Cipher
+# ------------------------------------------
+def scytale_encipher(plaintext, radius):
+    msg = plaintext.replace(" ", "").upper()
+    remainder = len(msg) % radius
+    if remainder != 0:
+        msg = msg.ljust(len(msg) + (radius - remainder), 'X')
+        
+    rows = radius
+    cols = len(msg) // rows
+    grid = [list(msg[i * cols:(i + 1) * cols]) for i in range(rows)]
+    
+    ciphertext = []
+    for c in range(cols):
+        for r in range(rows):
+            ciphertext.append(grid[r][c])
+    return "".join(ciphertext)
+
+def scytale_decipher(ciphertext, radius):
+    rows = radius
+    cols = len(ciphertext) // rows
+    grid = [['' for _ in range(cols)] for _ in range(rows)]
+    
+    idx = 0
+    for c in range(cols):
+        for r in range(rows):
+            grid[r][c] = ciphertext[idx]
+            idx += 1
+            
+    plaintext = []
+    for r in range(rows):
+        for c in range(cols):
+            plaintext.append(grid[r][c])
+    return "".join(plaintext)
+
+def scytale_demo():
+    print("\n--- 2. Scytale Cipher Demo ---")
+    msg = input("Enter message (e.g., PGMNIPHIORRMGTYOSOOAIWHTNCL): ").strip()
+    if not msg:
+        msg = "PGMNIPHIORRMGTYOSOOAIWHTNCL"
+    try:
+        radius = int(input("Enter cylinder radius / row count (e.g., 3): "))
+    except ValueError:
+        radius = 3
+        
+    encrypted = scytale_encipher(msg, radius)
+    decrypted = scytale_decipher(encrypted, radius)
+    print(f"Enciphered: {encrypted}")
+    print(f"Deciphered: {decrypted}")
+
+
+# ------------------------------------------
+# PROBLEM 3: Date Shift Cipher
+# ------------------------------------------
+def date_shift_encode(message, date_str):
+    digits = [int(ch) for ch in date_str if ch.isdigit()]
+    if not digits:
+        raise ValueError("Date string must contain digits.")
+    encoded_chars = []
+    digit_idx = 0
+    
+    for char in message:
+        if char.isalpha():
+            shift = digits[digit_idx % len(digits)]
+            base = ord('A') if char.isupper() else ord('a')
+            encoded_char = chr((ord(char) - base + shift) % 26 + base)
+            encoded_chars.append(encoded_char)
+            digit_idx += 1
+        else:
+            encoded_chars.append(char)
+    return "".join(encoded_chars)
+
+def date_shift_decode(ciphertext, date_str):
+    digits = [int(ch) for ch in date_str if ch.isdigit()]
+    decoded_chars = []
+    digit_idx = 0
+    
+    for char in ciphertext:
+        if char.isalpha():
+            shift = digits[digit_idx % len(digits)]
+            base = ord('A') if char.isupper() else ord('a')
+            decoded_char = chr((ord(char) - base - shift) % 26 + base)
+            decoded_chars.append(decoded_char)
+            digit_idx += 1
+        else:
+            decoded_chars.append(char)
+    return "".join(decoded_chars)
+
+def date_shift_demo():
+    print("\n--- 3. Date Shift Cipher Demo ---")
+    msg = input("Enter message to encode: ").strip()
+    if not msg:
+        msg = "Hello World"
+    date_str = input("Enter agreed date (e.g., 5/3/24): ").strip()
+    if not date_str:
+        date_str = "5/3/24"
+        
+    encoded = date_shift_encode(msg, date_str)
+    decoded = date_shift_decode(encoded, date_str)
+    print(f"Encoded: {encoded}")
+    print(f"Decoded: {decoded}")
+
+
+# ------------------------------------------
+# PROBLEM 4: Keyword Substitution Cipher
+# ------------------------------------------
+def create_substitution_alphabet(keyword):
+    keyword = keyword.upper()
+    seen = set()
+    sub_alpha = []
+    for char in keyword:
+        if char.isalpha() and char not in seen:
+            seen.add(char)
+            sub_alpha.append(char)
+    for ascii_val in range(ord('A'), ord('Z') + 1):
+        char = chr(ascii_val)
+        if char not in seen:
+            sub_alpha.append(char)
+    return "".join(sub_alpha)
+
+def keyword_sub_encode(message, keyword):
+    std_alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    sub_alpha = create_substitution_alphabet(keyword)
+    trans_table = str.maketrans(std_alpha + std_alpha.lower(), sub_alpha + sub_alpha.lower())
+    return message.translate(trans_table)
+
+def keyword_sub_decode(ciphertext, keyword):
+    std_alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    sub_alpha = create_substitution_alphabet(keyword)
+    trans_table = str.maketrans(sub_alpha + sub_alpha.lower(), std_alpha + std_alpha.lower())
+    return ciphertext.translate(trans_table)
+
+def keyword_sub_demo():
+    print("\n--- 4. Keyword Substitution Cipher Demo ---")
+    msg = input("Enter message: ").strip()
+    if not msg:
+        msg = "PYTHON"
+    kw = input("Enter keyword (e.g., PYTHON): ").strip()
+    if not kw:
+        kw = "PYTHON"
+        
+    encoded = keyword_sub_encode(msg, kw)
+    decoded = keyword_sub_decode(encoded, kw)
+    print(f"Encoded: {encoded}")
+    print(f"Decoded: {decoded}")
+
+
+# ------------------------------------------
+# PROBLEM 5: Polybius Checkerboard Cipher
+# ------------------------------------------
+POLYBIUS_BOARD = [
+    ['A', 'B', 'C', 'D', 'E'],
+    ['F', 'G', 'H', 'I', 'K'], # I and J combined
+    ['L', 'M', 'N', 'O', 'P'],
+    ['Q', 'R', 'S', 'T', 'U'],
+    ['V', 'W', 'X', 'Y', 'Z']
+]
+
+def locate_letter(board, letter):
+    letter = letter.upper()
+    if letter == 'J':
+        letter = 'I'
+    for r_idx, row in enumerate(board):
+        if letter in row:
+            return (r_idx, row.index(letter))
+    return None
+
+def encrypt_polybius(message, board):
+    ciphertext = []
+    for char in message.upper():
+        if char.isalpha():
+            coords = locate_letter(board, char)
+            if coords:
+                ciphertext.append(f"{coords[0]}{coords[1]}")
+    return " ".join(ciphertext)
+
+def decrypt_polybius(ciphertext, board):
+    plaintext = []
+    pairs = ciphertext.split()
+    for pair in pairs:
+        if len(pair) == 2 and pair.isdigit():
+            r = int(pair[0])
+            c = int(pair[1])
+            if 0 <= r < len(board) and 0 <= c < len(board[0]):
+                plaintext.append(board[r][c])
+    return "".join(plaintext)
+
+def polybius_demo():
+    print("\n--- 5. Polybius Checkerboard Cipher Demo ---")
+    msg = input("Enter message (e.g., PYTHON): ").strip()
+    if not msg:
+        msg = "PYTHON"
+        
+    encrypted = encrypt_polybius(msg, POLYBIUS_BOARD)
+    decrypted = decrypt_polybius(encrypted, POLYBIUS_BOARD)
+    print(f"Encrypted: {encrypted}")
+    print(f"Decrypted: {decrypted}")
+
+
+# ==========================================
+# MAIN MENU CONTROLLER
+# ==========================================
+def main():
+    while True:
+        print("\n==========================================")
+        print("      FINANCIAL & CIPHER TOOLKIT MENU     ")
+        print("==========================================")
+        print("1. Loan Amortization Schedule")
+        print("2. Scytale Cipher")
+        print("3. Date Shift Cipher")
+        print("4. Keyword Substitution Cipher")
+        print("5. Polybius Checkerboard Cipher")
+        print("6. Exit")
+        
+        choice = input("\nSelect a module (1-6): ").strip()
+        
+        if choice == '1':
+            generate_amortization_schedule()
+        elif choice == '2':
+            scytale_demo()
+        elif choice == '3':
+            date_shift_demo()
+        elif choice == '4':
+            keyword_sub_demo()
+        elif choice == '5':
+            polybius_demo()
+        elif choice == '6':
+            print("\nExiting toolkit. Goodbye!")
+            break
+        else:
+            print("\n[Invalid Selection] Please choose a number between 1 and 6.")
+
+if __name__ == "__main__":
+    main()
