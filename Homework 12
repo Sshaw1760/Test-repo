@@ -1,0 +1,411 @@
+import random
+import tkinter as tk
+from abc import ABC, abstractmethod
+
+# =====================================================================
+# PROBLEMS 1 & 2: LCR (Left Center Right) Game & Interfaces
+# =====================================================================
+
+class LCRDie:
+    """Represents a 6-sided LCR die: L, R, C, and 3 dots (safe)."""
+    FACES = ['L', 'R', 'C', '.', '.', '.']
+    
+    def roll(self):
+        return random.choice(self.FACES)
+
+
+class LCRPlayer:
+    def __init__(self, name, chips=3):
+        self.name = name
+        self.chips = chips
+        
+    def add_chips(self, amount):
+        self.chips += amount
+        
+    def remove_chips(self, amount):
+        self.chips = max(0, self.chips - amount)
+
+
+class LCRPot:
+    def __init__(self):
+        self.chips = 0
+        
+    def add(self, amount):
+        self.chips += amount
+        
+    def take_all(self):
+        val = self.chips
+        self.chips = 0
+        return val
+
+
+class LCRInterface(ABC):
+    """Abstract interface defining the contract for textual and GUI interfaces."""
+    @abstractmethod
+    def show_message(self, message):
+        pass
+        
+    @abstractmethod
+    def prompt_turn(self, player_name):
+        pass
+        
+    @abstractmethod
+    def update_status(self, players, pot):
+        pass
+
+
+class LCRTextInterface(LCRInterface):
+    def show_message(self, message):
+        print(message)
+        
+    def prompt_turn(self, player_name):
+        input(f"[{player_name}'s turn] Press Enter to roll...")
+        
+    def update_status(self, players, pot):
+        status = ", ".join([f"{p.name}: {p.chips}" for p in players])
+        print(f"Status -> Pot: {pot.chips} chips | {status}\n")
+
+
+class LCRGUIInterface(LCRInterface, tk.Tk):
+    def __init__(self, game_engine=None):
+        super().__init__()
+        self.game_engine = game_engine
+        self.title("LCR Game Simulation")
+        self.geometry("450x400")
+        
+        self.msg_var = tk.StringVar(value="Welcome to LCR!")
+        self.status_var = tk.StringVar(value="")
+        
+        tk.Label(self, textvariable=self.msg_var, font=("Arial", 12, "bold"), wraplength=400).pack(pady=20)
+        self.status_label = tk.Label(self, textvariable=self.status_var, font=("Arial", 10), justify=tk.LEFT)
+        self.status_label.pack(pady=10)
+        
+        self.roll_btn = tk.Button(self, text="Roll / Continue", command=self.on_roll_clicked, font=("Arial", 11), bg="#4CAF50", fg="white")
+        self.roll_btn.pack(pady=20)
+        
+        self.turn_ready = False
+
+    def show_message(self, message):
+        self.msg_var.set(message)
+        self.update()
+
+    def prompt_turn(self, player_name):
+        self.msg_var.set(f"{player_name}'s turn. Click Roll.")
+        self.turn_ready = False
+        while not self.turn_ready:
+            self.update_idletasks()
+            self.update()
+
+    def update_status(self, players, pot):
+        status = f"Center Pot: {pot.chips} chips\n\nPlayers:\n"
+        for p in players:
+            status += f" - {p.name}: {p.chips} chips\n"
+        self.status_var.set(status)
+
+    def on_roll_clicked(self):
+        self.turn_ready = True
+
+
+class LCRGame:
+    def __init__(self, player_names, interface_type="text"):
+        self.players = [LCRPlayer(name) for name in player_names]
+        self.pot = LCRPot()
+        self.die = LCRDie()
+        
+        if interface_type == "gui":
+            self.ui = LCRGUIInterface(self)
+        else:
+            self.ui = LCRTextInterface()
+
+    def play(self):
+        active_players = self.players
+        round_num = 1
+        
+        while len([p for p in active_players if p.chips > 0]) > 1:
+            self.ui.show_message(f"--- Round {round_num} ---")
+            self.ui.update_status(self.players, self.pot)
+            
+            for i, player in enumerate(active_players):
+                if player.chips == 0:
+                    continue
+                
+                self.ui.prompt_turn(player.name)
+                
+                rolls_count = min(player.chips, 3)
+                rolls = [self.die.roll() for _ in range(rolls_count)]
+                self.ui.show_message(f"{player.name} rolled: {rolls}")
+                
+                for face in rolls:
+                    if face == 'L':
+                        target = active_players[(i - 1) % len(active_players)]
+                        player.remove_chips(1)
+                        target.add_chips(1)
+                    elif face == 'R':
+                        target = active_players[(i + 1) % len(active_players)]
+                        player.remove_chips(1)
+                        target.add_chips(1)
+                    elif face == 'C':
+                        player.remove_chips(1)
+                        self.pot.add(1)
+                
+                self.ui.update_status(self.players, self.pot)
+                
+                remaining = [p for p in self.players if p.chips > 0]
+                if len(remaining) == 1:
+                    winner = remaining[0]
+                    winner.add_chips(self.pot.take_all())
+                    self.ui.show_message(f"Game Over! {winner.name} wins the game and the pot!")
+                    return
+            round_num += 1
+
+
+# =====================================================================
+# PROBLEMS 3 & 4: Ship, Captain, and Crew Game & Interfaces
+# =====================================================================
+
+class SCCDie:
+    def roll(self):
+        return random.randint(1, 6)
+
+
+class DiceCup:
+    def __init__(self):
+        self.dice = [SCCDie() for _ in range(5)]
+        self.ship = False
+        self.captain = False
+        self.crew = False
+        self.cargo = []
+        
+    def roll_remaining(self):
+        new_dice = []
+        for d in self.dice:
+            val = d.roll()
+            if not self.ship and val == 6:
+                self.ship = True
+            elif self.ship and not self.captain and val == 5:
+                self.captain = True
+            elif self.ship and self.captain and not self.crew and val == 4:
+                self.crew = True
+            else:
+                new_dice.append(val)
+        self.cargo = new_dice
+
+    def get_score(self):
+        if self.ship and self.captain and self.crew:
+            return sum(self.cargo)
+        return 0
+
+
+class SCCPlayer:
+    def __init__(self, name):
+        self.name = name
+        self.score = 0
+
+
+class SCCInterface(ABC):
+    """Abstract interface defining the contract for textual and GUI interfaces."""
+    @abstractmethod
+    def show_message(self, message):
+        pass
+
+    @abstractmethod
+    def prompt_roll(self, player_name, attempt):
+        pass
+
+    @abstractmethod
+    def ask_reroll_cargo(self):
+        pass
+
+    @abstractmethod
+    def display_cup_state(self, cup):
+        pass
+
+
+class SCCTextInterface(SCCInterface):
+    def show_message(self, message):
+        print(message)
+
+    def prompt_roll(self, player_name, attempt):
+        input(f"[{player_name}'s Turn - Roll {attempt}] Press Enter to roll...")
+
+    def ask_reroll_cargo(self):
+        choice = input("You have Ship, Captain, and Crew! Reroll cargo for a better score? (y/n): ")
+        return choice.lower() == 'y'
+
+    def display_cup_state(self, cup):
+        print(f"Status -> Ship(6): {cup.ship} | Captain(5): {cup.captain} | Crew(4): {cup.crew} | Cargo: {cup.cargo}")
+
+
+class SCCGUIInterface(SCCInterface, tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Ship, Captain, and Crew Game")
+        self.geometry("450x400")
+
+        self.msg_var = tk.StringVar(value="Welcome to Ship, Captain, and Crew!")
+        self.status_var = tk.StringVar(value="")
+
+        tk.Label(self, textvariable=self.msg_var, font=("Arial", 12, "bold"), wraplength=400).pack(pady=20)
+        tk.Label(self, textvariable=self.status_var, font=("Arial", 10), justify=tk.LEFT).pack(pady=10)
+
+        self.action_btn = tk.Button(self, text="Roll Dice", command=self.on_action, font=("Arial", 11), bg="#2196F3", fg="white")
+        self.action_btn.pack(pady=10)
+
+        self.reroll_btn = tk.Button(self, text="Keep Score & End Turn", command=self.on_keep, font=("Arial", 11), bg="#f44336", fg="white")
+        self.reroll_btn.pack(pady=5)
+        self.reroll_btn.pack_forget()
+
+        self.user_choice = None
+        self.action_clicked = False
+
+    def show_message(self, message):
+        self.msg_var.set(message)
+        self.update()
+
+    def prompt_roll(self, player_name, attempt):
+        self.msg_var.set(f"{player_name}'s Turn (Roll {attempt}/3). Click Roll.")
+        self.reroll_btn.pack_forget()
+        self.action_clicked = False
+        while not self.action_clicked:
+            self.update_idletasks()
+            self.update()
+
+    def ask_reroll_cargo(self):
+        self.msg_var.set("Ship, Captain & Crew secured! Roll again or keep score?")
+        self.reroll_btn.pack(pady=5)
+        self.user_choice = None
+        while self.user_choice is None:
+            self.update_idletasks()
+            self.update()
+        self.reroll_btn.pack_forget()
+        return self.user_choice
+
+    def display_cup_state(self, cup):
+        status = f"Ship (6): {'Yes' if cup.ship else 'No'}\n"
+        status += f"Captain (5): {'Yes' if cup.captain else 'No'}\n"
+        status += f"Crew (4): {'Yes' if cup.crew else 'No'}\n"
+        status += f"Cargo Dice: {cup.cargo}\n"
+        status += f"Current Cargo Score: {cup.get_score()}"
+        self.status_var.set(status)
+        self.update()
+
+    def on_action(self):
+        self.action_clicked = True
+        self.user_choice = True
+
+    def on_keep(self):
+        self.user_choice = False
+
+
+class ShipCaptainCrewGame:
+    def __init__(self, player_names, interface_type="text"):
+        self.players = [SCCPlayer(name) for name in player_names]
+        if interface_type == "gui":
+            self.ui = SCCGUIInterface()
+        else:
+            self.ui = SCCTextInterface()
+
+    def play_turn(self, player):
+        cup = DiceCup()
+        self.ui.show_message(f"--- {player.name}'s Turn ---")
+        for attempt in range(1, 4):
+            self.ui.prompt_roll(player.name, attempt)
+            cup.roll_remaining()
+            self.ui.display_cup_state(cup)
+            
+            if cup.ship and cup.captain and cup.crew and attempt < 3:
+                if not self.ui.ask_reroll_cargo():
+                    break
+                    
+        player.score = cup.get_score()
+        self.ui.show_message(f"{player.name}'s final turn score: {player.score}")
+
+    def play(self):
+        for player in self.players:
+            self.play_turn(player)
+        
+        highest_score = max(p.score for p in self.players)
+        winners = [p for p in self.players if p.score == highest_score]
+        
+        if len(winners) == 1:
+            self.ui.show_message(f"Winner: {winners[0].name} with a score of {winners[0].score}!")
+        else:
+            names = ", ".join([w.name for w in winners])
+            self.ui.show_message(f"Tie between: {names} with {highest_score} points!")
+
+
+# =====================================================================
+# PROBLEM 5: Three-Ball Bouncing Physics Simulation
+# =====================================================================
+
+class PhysicsBall:
+    """Encapsulates a bouncing ball with gravitational physics and collision elasticity."""
+    def __init__(self, canvas_width, canvas_height, radius, color):
+        self.radius = radius
+        self.x = random.randint(radius, canvas_width - radius)
+        self.y = random.randint(radius, canvas_height // 2)
+        self.vx = random.uniform(-4, 4)
+        self.vy = random.uniform(0, 3)
+        self.gravity = 0.5
+        self.restitution = 0.8
+        self.color = color
+        self.width = canvas_width
+        self.height = canvas_height
+        self.item = None
+
+    def update(self):
+        self.vy += self.gravity
+        self.x += self.vx
+        self.y += self.vy
+        
+        if self.y + self.radius >= self.height:
+            self.y = self.height - self.radius
+            self.vy = -self.vy * self.restitution
+            self.vx *= 0.98
+            
+        if self.y - self.radius <= 0:
+            self.y = self.radius
+            self.vy = -self.vy * self.restitution
+            
+        if self.x - self.radius <= 0 or self.x + self.radius >= self.width:
+            self.vx = -self.vx * self.restitution
+            self.x = max(self.radius, min(self.x, self.width - self.radius))
+
+
+class BouncingSimulation:
+    def __init__(self, width=600, height=600):
+        self.root = tk.Tk()
+        self.root.title("Three-Ball Bouncing Physics Simulation")
+        
+        self.width = width
+        self.height = height
+        
+        self.canvas = tk.Canvas(self.root, width=self.width, height=self.height, bg="white")
+        self.canvas.pack()
+        
+        colors = ["red", "blue", "green"]
+        self.balls = [PhysicsBall(self.width, self.height, radius=20, color=c) for c in colors]
+        
+        for ball in self.balls:
+            ball.item = self.canvas.create_oval(
+                ball.x - ball.radius, ball.y - ball.radius,
+                ball.x + ball.radius, ball.y + ball.radius,
+                fill=ball.color
+            )
+            
+        self.animating = True
+        self.animate()
+
+    def animate(self):
+        if self.animating:
+            for ball in self.balls:
+                ball.update()
+                self.canvas.coords(
+                    ball.item,
+                    ball.x - ball.radius, ball.y - ball.radius,
+                    ball.x + ball.radius, ball.y + ball.radius
+                )
+            self.root.after(20, self.animate)
+
+    def run(self):
+        self.root.mainloop()
