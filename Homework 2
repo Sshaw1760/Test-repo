@@ -1,0 +1,33 @@
+
+# 1. Kilometers to Smoots
+kilometers = float(input("Enter distance in kilometers: "))
+smoots = (kilometers * 1000) / 1.70
+print("Distance in smoots:", smoots)
+
+print("----------------------------")
+
+# 2. Centimeters to Mickeys
+centimeters = float(input("Enter distance in centimeters: "))
+mickeys = centimeters * 10 * 16
+print("Distance in mickeys:", mickeys)
+
+print("----------------------------")
+
+# 3. X Followers to Wheatons
+followers = float(input("Enter number of X followers: "))
+wheatons = followers / 500000
+print("Number of Wheatons:", wheatons)
+
+print("----------------------------")
+
+# 4. Celsius to Kelvin
+celsius = float(input("Enter temperature in Celsius: "))
+kelvin = celsius + 273.15
+print("Temperature in Kelvin:", kelvin)
+
+print("----------------------------")
+
+# 5. Fahrenheit to Kelvin
+fahrenheit = float(input("Enter temperature in Fahrenheit: "))
+kelvin = (fahrenheit - 32) * 5/9 + 273.15
+print("Temperature in Kelvin:", kelvin)
