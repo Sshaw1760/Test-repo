@@ -1,0 +1,192 @@
+
+from graphics import *
+import math
+
+# Logistic function used for Problems 3, 4, and 5
+def logistic(x, L=100, k=0.1, x0=50):
+    return L / (1 + math.exp(-k * (x - x0)))
+
+
+# Draw a regular polygon
+def draw_polygon(sides, radius, rotated=False):
+    win = GraphWin("Polygon", 600, 600)
+    center = Point(300, 300)
+
+    vertices = []
+    angle = 360 / sides
+
+    if rotated:
+        offset = 90 - angle / 2
+    else:
+        offset = 0
+
+    for i in range(sides):
+        degrees = i * angle + offset
+        radians = math.radians(degrees)
+
+        x = 300 + radius * math.cos(radians)
+        y = 300 + radius * math.sin(radians)
+
+        vertices.append(Point(x, y))
+
+    polygon = Polygon(vertices)
+    polygon.draw(win)
+
+    win.getMouse()
+    win.close()
+
+
+# Draw logistic graph
+def draw_graph(connected=False, L=100, k=0.1, x0=50):
+    win = GraphWin("Logistic Graph", 700, 500)
+
+    # Draw axes
+    Line(Point(50, 420), Point(650, 420)).draw(win)
+    Line(Point(50, 420), Point(50, 50)).draw(win)
+
+    Text(Point(350, 460), "X").draw(win)
+    Text(Point(25, 50), "Y").draw(win)
+
+    previous = None
+
+    # Plot 100 points
+    for x in range(100):
+        y = logistic(x, L, k, x0)
+
+        screen_x = 50 + x * 6
+        screen_y = 420 - (y / (L * 1.1)) * 350
+
+        current = Point(screen_x, screen_y)
+
+        if connected:
+            if previous is not None:
+                line = Line(previous, current)
+                line.draw(win)
+        else:
+            point = Circle(current, 2)
+            point.draw(win)
+
+        previous = current
+
+    win.getMouse()
+    win.close()
+
+
+# Problem 5: Graph with input boxes and Graph/Exit button
+def problem5():
+    win = GraphWin("Logistic Graph", 800, 500)
+
+    # Draw axes
+    Line(Point(50, 420), Point(540, 420)).draw(win)
+    Line(Point(50, 420), Point(50, 50)).draw(win)
+
+    Text(Point(300, 460), "X").draw(win)
+    Text(Point(25, 50), "Y").draw(win)
+
+    # Input labels
+    Text(Point(660, 70), "Logistic Function").draw(win)
+
+    Text(Point(610, 130), "L (Maximum):").draw(win)
+    entry_L = Entry(Point(710, 130), 8)
+    entry_L.setText("100")
+    entry_L.draw(win)
+
+    Text(Point(610, 190), "k (Growth Rate):").draw(win)
+    entry_k = Entry(Point(710, 190), 8)
+    entry_k.setText("0.1")
+    entry_k.draw(win)
+
+    Text(Point(610, 250), "x0 (Midpoint):").draw(win)
+    entry_x0 = Entry(Point(710, 250), 8)
+    entry_x0.setText("50")
+    entry_x0.draw(win)
+
+    # Graph button
+    button = Rectangle(Point(620, 310), Point(750, 355))
+    button.draw(win)
+
+    button_text = Text(Point(685, 332), "Graph")
+    button_text.draw(win)
+
+    # Wait for button click
+    click = win.getMouse()
+
+    if (620 <= click.getX() <= 750 and
+            310 <= click.getY() <= 355):
+
+        try:
+            L = float(entry_L.getText())
+            k = float(entry_k.getText())
+            x0 = float(entry_x0.getText())
+
+            if L <= 0:
+                raise ValueError
+
+            previous = None
+
+            # Plot connected logistic graph
+            for x in range(100):
+                y = logistic(x, L, k, x0)
+
+                screen_x = 50 + x * 4.9
+                screen_y = 420 - (y / (L * 1.1)) * 350
+
+                current = Point(screen_x, screen_y)
+
+                if previous is not None:
+                    line = Line(previous, current)
+                    line.draw(win)
+
+                previous = current
+
+            # Change button label to Exit
+            button_text.setText("Exit")
+
+            win.getMouse()
+
+        except ValueError:
+            error = Text(Point(685, 390),
+                         "Please enter valid numbers (L must be positive)")
+            error.draw(win)
+            win.getMouse()
+
+    win.close()
+
+
+# Main menu
+def main():
+    print("SUPPLEMENTAL CHAPTER 4")
+    print("----------------------------")
+    print("1. Draw a Polygon")
+    print("2. Draw a Rotated Polygon")
+    print("3. Logistic Graph (Points)")
+    print("4. Logistic Graph (Connected Lines)")
+    print("5. Logistic Graph (Input Boxes and Button)")
+    print("----------------------------")
+
+    choice = int(input("Choose a problem (1-5): "))
+
+    if choice == 1:
+        sides = int(input("Enter number of sides: "))
+        radius = float(input("Enter radius: "))
+        draw_polygon(sides, radius)
+
+    elif choice == 2:
+        sides = int(input("Enter number of sides: "))
+        radius = float(input("Enter radius: "))
+        draw_polygon(sides, radius, True)
+
+    elif choice == 3:
+        draw_graph(False)
+
+    elif choice == 4:
+        draw_graph(True)
+
+    elif choice == 5:
+        problem5()
+
+    else:
+        print("Invalid choice. Please choose 1-5.")
+
+
+main()
